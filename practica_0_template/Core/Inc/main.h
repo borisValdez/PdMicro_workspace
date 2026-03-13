@@ -28,7 +28,8 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-
+#include <stdint.h>
+#include <stdbool.h>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -36,6 +37,15 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+typedef uint32_t tick_t;
+typedef bool bool_t;
+
+typedef struct{
+   tick_t startTime;
+   tick_t duration;
+   bool_t running;
+} delay_t;
+
 
 /* USER CODE END ET */
 
@@ -53,6 +63,9 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+void delayInit(delay_t *delay, tick_t duration);
+bool_t delayRead(delay_t *delay);
+void delayWrite(delay_t *delay, tick_t duration);
 
 /* USER CODE END EFP */
 

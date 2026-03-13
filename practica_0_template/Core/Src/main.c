@@ -22,9 +22,12 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
+
+
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -42,7 +45,11 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+delay_t delayLed;
 
+uint32_t pattern[] = {1000, 200, 100};
+uint8_t patternIndex = 0;
+uint8_t blinkCount = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -50,6 +57,9 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
+
+
+
 
 /* USER CODE END PFP */
 
@@ -88,28 +98,34 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  delayInit(&delayLed, pattern[patternIndex]/2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
+      if(delayRead(&delayLed))
+      {
+          HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-    /* USER CODE BEGIN 3 */
+          blinkCount++;
 
-	  HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	  //HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	  HAL_Delay(500);
+          if(blinkCount >= 10)
+          {
+              blinkCount = 0;
+              patternIndex++;
 
-	  if (!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){
-		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1);
-		  while(1);
-	  }
+              if(patternIndex >= 3)
+                  patternIndex = 0;
 
-
+              delayWrite(&delayLed, pattern[patternIndex]/2);
+          }
+      }
   }
+
+
+
   /* USER CODE END 3 */
 }
 
@@ -227,6 +243,40 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void delayInit(delay_t *delay, tick_t duration)
+{
+    delay->duration = duration;
+    delay->running = false;
+}
+
+bool_t delayRead(delay_t *delay)
+{
+    if(delay->running == false)
+    {
+        delay->startTime = HAL_GetTick();
+        delay->running = true;
+        return false;
+    }
+    else
+    {
+        tick_t currentTime = HAL_GetTick();
+
+        if((currentTime - delay->startTime) >= delay->duration)
+        {
+            delay->running = false;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+}
+
+void delayWrite(delay_t *delay, tick_t duration)
+{
+    delay->duration = duration;
+}
 
 /* USER CODE END 4 */
 
