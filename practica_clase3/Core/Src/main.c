@@ -100,7 +100,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  delayInit(&delayLed, TIEMPOS[0] / 2);
+  delayInit(&delayLed, TIEMPOS[0] );
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -123,7 +123,7 @@ int main(void)
                   if(indice >= (sizeof(TIEMPOS)/sizeof(TIEMPOS[0])))
                       indice = 0;
 
-                  delayWrite(&delayLed, TIEMPOS[indice] / 2);
+                  delayWrite(&delayLed, TIEMPOS[indice] );
               }
           }
       }
