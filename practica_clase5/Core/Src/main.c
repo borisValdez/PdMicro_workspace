@@ -18,12 +18,16 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "API_delay.h"
+#include "API_debounce.h"
+
+#include "API_uart.h"
+#include "API_cmdparser.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "API_uart.h"
-#include "API_cmdparser.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,9 +52,9 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 delay_t delayLed;
 
-uint32_t pattern[] = {1000, 200, 100};
-uint8_t patternIndex = 0;
-uint8_t blinkCount = 0;
+const uint32_t PERIODOS[] = {100, 500};
+uint8_t indice = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,7 +63,8 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
-
+void ledOn(void);
+void ledOff(void);
 
 
 /* USER CODE END PFP */
@@ -99,23 +104,16 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  delayInit(&delayLed, pattern[patternIndex]/2);
-
-  uartInit(&huart2);
-  cmdParserInit();
-
-  uartSendString((uint8_t*)"\r\nSistema listo\r\n");
+  debounceFSM_init();      //Inicio la MEF
+  delayInit(&delayLed, PERIODOS[indice]); // Mando al delay no bloqueando los preiodos indicados
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  cmdPoll();
+	  	 cmdPoll();
   }
-
-
-
   /* USER CODE END 3 */
 }
 
@@ -176,7 +174,6 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE BEGIN USART2_Init 0 */
 
-
   /* USER CODE END USART2_Init 0 */
 
   /* USER CODE BEGIN USART2_Init 1 */
@@ -234,41 +231,25 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void delayInit(delay_t *delay, tick_t duration)
+void ledOn(void)
 {
-    delay->duration = duration;
-    delay->running = false;
+    HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
 }
 
-bool_t delayRead(delay_t *delay)
+void ledOff(void)
 {
-    if(delay->running == false)
-    {
-        delay->startTime = HAL_GetTick();
-        delay->running = true;
-        return false;
-    }
-    else
-    {
-        tick_t currentTime = HAL_GetTick();
-
-        if((currentTime - delay->startTime) >= delay->duration)
-        {
-            delay->running = false;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
+    HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 }
 
-void delayWrite(delay_t *delay, tick_t duration)
+void ledToggle(void)
 {
-    delay->duration = duration;
+    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 }
 
+uint8_t ledStatus(void)
+{
+    return HAL_GPIO_ReadPin(LD2_GPIO_Port, LD2_Pin);
+}
 /* USER CODE END 4 */
 
 /**
