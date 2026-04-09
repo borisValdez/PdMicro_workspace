@@ -79,13 +79,13 @@ void uartSendStringSize(uint8_t * pstring, uint16_t size) // funciòn para envia
 }
 
 
-bool_t uartReceiveStringSize(uint8_t * pstring, uint16_t size)  // Recibir string y tamaño
-
+bool_t uartReceiveStringSize(uint8_t * pstring, uint16_t size)
 {
-    if(pstring == NULL || size == 0 || size > 256) // verifico que el string tenga sentido y que el tamaño no sea mayor que lo que puede enviar la uart
-    {
-        return;
-    }
+    if(pstring == NULL)
+        return false;
+
+    if(size == 0 || size > 256)
+        return false;
 
     HAL_StatusTypeDef status;
 
@@ -93,11 +93,9 @@ bool_t uartReceiveStringSize(uint8_t * pstring, uint16_t size)  // Recibir strin
                 uartHandle,
                 pstring,
                 size,
-                UART_TIMEOUT);
+                1);
+    if(status == HAL_OK)
+        return true;
 
-    if(status != HAL_OK)
-    {
-        //fallò
-    }
+    return false;
 }
-

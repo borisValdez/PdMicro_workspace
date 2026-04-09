@@ -42,77 +42,74 @@ void cmdParserInit(void)    // Inicializo en IDLE, apuntando a la primer posici√
 
 void cmdPoll(void)				//Funci√≤n que sera llamada constantemente por main.c
 {
-    uint8_t rxChar; 			// variable donde se guarda el byte
+    uint8_t rxChar;
+    bool_t newChar = uartReceiveStringSize(&rxChar, 1);
 
-    if (uartReceiveStringSize(&rxChar, 1) == true)
+    switch (state)
     {
-        switch (state)
-        {
-            case CMD_IDLE:							// En caso IDEL
 
-                if (rxChar != '\r' && rxChar != '\n')		// Si estoy recibiendo algo y aun no llego el /n
-                {
-                	cmdIndex = 0;
-                	cmdLine[0] = '\0';
-                    cmdLine[cmdIndex++] = rxChar;
-                    state = CMD_RECEIVING;					// paso a estado recibiendo
-                }
+        case CMD_IDLE:
 
-                break;
+            if (newChar && rxChar != '\r' && rxChar != '\n')
+            {
+                cmdIndex = 0;
+                cmdLine[0] = '\0';
+                cmdLine[cmdIndex++] = rxChar;
+                state = CMD_RECEIVING;
+            }
+            break;
 
 
-            case CMD_RECEIVING:				//En caso del state recibiendo
+        case CMD_RECEIVING:
 
-                if (rxChar == '\r' || rxChar == '\n')		//si recibio el /n
+            if (newChar)
+            {
+                if (rxChar == '\r')
                 {
                     cmdLine[cmdIndex] = '\0';
                     state = CMD_PROCESS;
                 }
                 else if (cmdIndex < (CMD_MAX_LINE - 1))
                 {
-                    cmdLine[cmdIndex++] = rxChar;		//sino guarda en rxchar en el siguiente indice de Line
+                    cmdLine[cmdIndex++] = rxChar;
                 }
                 else
                 {
-                    state = CMD_ERROR;				// si no hay espacio en buffer, error
+                    state = CMD_ERROR;
                 }
-
-                break;
-
-
-            case CMD_PROCESS:		//procesar el comando recibido
-
-                if (parseLine() == CMD_OK)		// si parseo es ok
-                {
-                    state = CMD_EXEC;			// ejecuto
-                }
-                else
-                {
-                    state = CMD_ERROR;		//sino error
-                }
-
-                break;
+            }
+            break;
 
 
-            case CMD_EXEC:		// Estado: ejecutar comando
+        case CMD_PROCESS:
 
-                executeCommand();		// Ejecuta el comando (help, led, etc.)
-                cmdIndex = 0;
-                cmdLine[0] = '\0'; // y limpio el buffer
-                state = CMD_IDLE;     // Vuelvo a dejar el estado IDLE para esperar otro comando
+            if (parseLine() == CMD_OK)
+            {
+                state = CMD_EXEC;
+            }
+            else
+            {
+                state = CMD_ERROR;
+            }
+            break;
 
-                break;
+
+        case CMD_EXEC:
+
+            executeCommand();
+            cmdIndex = 0;
+            cmdLine[0] = '\0';
+            state = CMD_IDLE;
+            break;
 
 
-            case CMD_ERROR:
+        case CMD_ERROR:
 
-                uartSendString((uint8_t*)"Error\r\n");
-                cmdIndex = 0;
-                cmdLine[0] = '\0';
-                state = CMD_IDLE;
-
-                break;
-        }
+            uartSendString((uint8_t*)"Error\r\n");
+            cmdIndex = 0;
+            cmdLine[0] = '\0';
+            state = CMD_IDLE;
+            break;
     }
 }
 
