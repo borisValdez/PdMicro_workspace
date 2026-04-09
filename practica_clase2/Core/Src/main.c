@@ -22,7 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-
+#include "API_uart.h"
+#include "API_cmdparser.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -99,29 +100,18 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
   delayInit(&delayLed, pattern[patternIndex]/2);
+
+  uartInit(&huart2);
+  cmdParserInit();
+
+  uartSendString((uint8_t*)"\r\nSistema listo\r\n");
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      if(delayRead(&delayLed))
-      {
-          HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-
-          blinkCount++;
-
-          if(blinkCount >= 10)
-          {
-              blinkCount = 0;
-              patternIndex++;
-
-              if(patternIndex >= 3)
-                  patternIndex = 0;
-
-              delayWrite(&delayLed, pattern[patternIndex]/2);
-          }
-      }
+	  cmdPoll();
   }
 
 
@@ -185,6 +175,7 @@ static void MX_USART2_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART2_Init 0 */
+
 
   /* USER CODE END USART2_Init 0 */
 
